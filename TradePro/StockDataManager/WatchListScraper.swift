@@ -60,7 +60,6 @@ class WatchlistScraper {
                         )
                         items.append(item)
                     }
-                    print(items)
                 }
                 
                 completion(items, nil)

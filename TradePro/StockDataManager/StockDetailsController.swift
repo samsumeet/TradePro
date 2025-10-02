@@ -46,8 +46,10 @@ class StockDetailsController: ObservableObject {
                     return
                 }
 
+                
                 do {
                     let result = try JSONDecoder().decode(ChartResponse.self, from: data)
+                    //print(result)
                     self?.chartResponse = result
                     completion(result)
                 } catch {

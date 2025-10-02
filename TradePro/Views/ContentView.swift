@@ -19,53 +19,58 @@ struct ContentView: View {
 
     var body: some View {
         NavigationView {
-            VStack {
-                if isLoading {
-                    ProgressView("Loading stocks...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if watchlistItems.isEmpty && !errorMessage.isEmpty {
-                    VStack {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 50))
-                            .foregroundColor(.orange)
-                        Text("Failed to load stocks")
-                            .font(.headline)
-                        Text(errorMessage)
-                            .font(.caption)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                        Button("Retry") {
-                            fetchWatchlist()
+            ZStack {
+                // Background gradient
+                LinearGradient(
+                    gradient: Gradient(colors: [Color(.systemBackground), Color(.systemGray6).opacity(0.3)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+                
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        if isLoading {
+                            VStack(spacing: 20) {
+                                ProgressView()
+                                    .scaleEffect(1.2)
+                                Text("Loading stocks...")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 200)
+                        } else if watchlistItems.isEmpty && !errorMessage.isEmpty {
+                            ErrorCardView(errorMessage: errorMessage) {
+                                fetchWatchlist()
+                            }
+                        } else if watchlistItems.isEmpty {
+                            EmptyStateCardView {
+                                fetchWatchlist()
+                            }
+                        } else {
+                            ForEach(watchlistItems, id: \.wkn) { item in
+                                NavigationLink(destination: StockDetailsView(stock: item)) {
+                                    StockCardView(item: item)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
                         }
-                        .buttonStyle(.borderedProminent)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if watchlistItems.isEmpty {
-                    VStack {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 50))
-                            .foregroundColor(.blue)
-                        Text("No stocks available")
-                            .font(.headline)
-                        Text("Pull to refresh or tap the refresh button")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List(watchlistItems, id: \.wkn) { item in
-                        StockRowView(item: item)
-                    }
-                    .refreshable {
-                        fetchWatchlist()
-                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 20)
+                }
+                .refreshable {
+                    await performRefresh()
                 }
             }
             .navigationTitle("Stock Watchlist")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: fetchWatchlist) {
                         Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 16, weight: .medium))
                     }
                     .disabled(isLoading)
                 }
@@ -101,65 +106,133 @@ struct ContentView: View {
             }
         }
     }
+    
+    private func performRefresh() async {
+        await withCheckedContinuation { continuation in
+            fetchWatchlist()
+            continuation.resume()
+        }
+    }
 }
 
-
-
-struct StockRowView: View {
+struct StockCardView: View {
     let item: WatchlistItem
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(spacing: 0) {
+            // Header with stock name and change
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(item.name)
-                        .font(.headline)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.primary)
                         .lineLimit(1)
+                    
                     Text("WKN: \(item.wkn)")
-                        .font(.caption)
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
                 }
                 
                 Spacer()
                 
-                VStack(alignment: .trailing, spacing: 2) {
-                    HStack(spacing: 4) {
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack(spacing: 6) {
                         Text(item.diff)
-                            .font(.caption)
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(diffColor)
+                        
                         Text("(\(item.diffPercent))")
-                            .font(.caption)
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(diffColor)
                     }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(diffColor.opacity(0.1))
+                    )
+                    
                     Text(item.time)
-                        .font(.caption2)
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.secondary)
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
             
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Bid")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Text(item.bid)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+            // Divider
+            Rectangle()
+                .fill(Color(.systemGray5))
+                .frame(height: 1)
+                .padding(.horizontal, 20)
+            
+            // Bid/Ask section
+            HStack(spacing: 0) {
+                // Bid section
+                VStack(spacing: 8) {
+                    HStack {
+                        Circle()
+                            .fill(.green.opacity(0.2))
+                            .frame(width: 8, height: 8)
+                        Text("Bid")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    
+                    HStack {
+                        Text(item.bid)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                        Spacer()
+                    }
                 }
+                .frame(maxWidth: .infinity)
                 
-                Spacer()
+                // Vertical divider
+                Rectangle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: 1, height: 40)
                 
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("Ask")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Text(item.ask)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                // Ask section
+                VStack(spacing: 8) {
+                    HStack {
+                        Spacer()
+                        Text("Ask")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                        Circle()
+                            .fill(.red.opacity(0.2))
+                            .frame(width: 8, height: 8)
+                    }
+                    
+                    HStack {
+                        Spacer()
+                        Text(item.ask)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                    }
                 }
+                .frame(maxWidth: .infinity)
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
         }
-        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(
+                    color: Color.black.opacity(0.08),
+                    radius: 8,
+                    x: 0,
+                    y: 2
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.systemGray6), lineWidth: 0.5)
+        )
     }
     
     private var diffColor: Color {
@@ -168,8 +241,121 @@ struct StockRowView: View {
         } else if item.diff.hasPrefix("-") {
             return .red
         } else {
-            return .primary
+            return .orange
         }
+    }
+}
+
+struct ErrorCardView: View {
+    let errorMessage: String
+    let onRetry: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            VStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(.orange)
+                
+                Text("Failed to load stocks")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Text(errorMessage)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+            }
+            
+            Button(action: onRetry) {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 14, weight: .medium))
+                    Text("Retry")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 25)
+                        .fill(.blue)
+                )
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(
+                    color: Color.black.opacity(0.08),
+                    radius: 8,
+                    x: 0,
+                    y: 2
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.systemGray6), lineWidth: 0.5)
+        )
+    }
+}
+
+struct EmptyStateCardView: View {
+    let onRefresh: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            VStack(spacing: 12) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 50))
+                    .foregroundColor(.blue)
+                
+                Text("No stocks available")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Text("Pull to refresh or tap the refresh button to load your watchlist")
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+            }
+            
+            Button(action: onRefresh) {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 14, weight: .medium))
+                    Text("Refresh")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 25)
+                        .fill(.blue)
+                )
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(
+                    color: Color.black.opacity(0.08),
+                    radius: 8,
+                    x: 0,
+                    y: 2
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.systemGray6), lineWidth: 0.5)
+        )
     }
 }
 
