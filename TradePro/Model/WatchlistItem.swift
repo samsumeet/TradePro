@@ -15,4 +15,5 @@ struct WatchlistItem: Identifiable {
     let diff: String
     let diffPercent: String
     let time: String
+    let instrumentId: String
 }

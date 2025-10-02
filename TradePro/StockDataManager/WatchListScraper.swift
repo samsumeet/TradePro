@@ -31,6 +31,11 @@ class WatchlistScraper {
             }
             
             do {
+                
+                if let stocks = self.loadStocksFromJSON() {
+                    print("Loaded \(stocks.count) stocks")
+                    print(stocks[0].name)
+                
                 let doc: Document = try SwiftSoup.parse(html)
                 
                 // The table rows inside the watchlist table
@@ -41,7 +46,8 @@ class WatchlistScraper {
                     
                     let cols = try row.select("td")
                     if cols.size() >= 7 {
-                        print(cols)
+                        //print(cols.get(1))
+                        let instumentId:String = self.instrumentID(for: try cols.get(0).text(), in: stocks) ?? ""
                         let item = WatchlistItem(
                             wkn: try cols.get(0).text(),
                             name: try cols.get(1).text(),
@@ -49,17 +55,42 @@ class WatchlistScraper {
                             ask: try cols.get(3).text(),
                             diff: try cols.get(4).text(),
                             diffPercent: try cols.get(5).text(),
-                            time: try cols.get(6).text()
+                            time: try cols.get(6).text(),
+                            instrumentId: instumentId
                         )
                         items.append(item)
                     }
+                    print(items)
                 }
                 
                 completion(items, nil)
+                }
             } catch {
                 completion(nil, error)
             }
         }
         task.resume()
     }
+    
+    
+    func instrumentID(for wkn: String, in stocks: [Stock]) -> String? {
+        return stocks.first { $0.wkn == wkn }?.instrument_id
+    }
+
+    
+    func loadStocksFromJSON() -> [Stock]? {
+        guard let url = Bundle.main.url(forResource: "stocks", withExtension: "json") else {
+            print("stocks.json file not found")
+            return nil
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            let stocks = try JSONDecoder().decode([Stock].self, from: data)
+            return stocks
+        } catch {
+            print("Error decoding JSON: \(error)")
+            return nil
+        }
+    }
+
 }

@@ -54,7 +54,9 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List(watchlistItems, id: \.wkn) { item in
-                        StockRowView(item: item)
+                        NavigationLink(destination: StockDetailsView(stock: item)) {
+                            StockRowView(item: item)
+                        }
                     }
                     .refreshable {
                         fetchWatchlist()
