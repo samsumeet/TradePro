@@ -10,76 +10,166 @@ import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
-
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
+    @State private var watchlistItems: [WatchlistItem] = []
+    @State private var isLoading = false
+    @State private var errorMessage = ""
+    @State private var showError = false
+    
+    private let scraper = WatchlistScraper()
 
     var body: some View {
         NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+            VStack {
+                if isLoading {
+                    ProgressView("Loading stocks...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if watchlistItems.isEmpty && !errorMessage.isEmpty {
+                    VStack {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 50))
+                            .foregroundColor(.orange)
+                        Text("Failed to load stocks")
+                            .font(.headline)
+                        Text(errorMessage)
+                            .font(.caption)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                        Button("Retry") {
+                            fetchWatchlist()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if watchlistItems.isEmpty {
+                    VStack {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 50))
+                            .foregroundColor(.blue)
+                        Text("No stocks available")
+                            .font(.headline)
+                        Text("Pull to refresh or tap the refresh button")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List(watchlistItems, id: \.wkn) { item in
+                        StockRowView(item: item)
+                    }
+                    .refreshable {
+                        fetchWatchlist()
                     }
                 }
-                .onDelete(perform: deleteItems)
             }
+            .navigationTitle("Stock Watchlist")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    Button(action: fetchWatchlist) {
+                        Image(systemName: "arrow.clockwise")
                     }
+                    .disabled(isLoading)
                 }
             }
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            .onAppear {
+                fetchWatchlist()
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
             }
         }
     }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+    
+    private func fetchWatchlist() {
+        isLoading = true
+        errorMessage = ""
+        
+        scraper.fetchWatchlist { items, error in
+            DispatchQueue.main.async {
+                isLoading = false
+                
+                if let error = error {
+                    errorMessage = error.localizedDescription
+                    showError = true
+                } else if let items = items {
+                    watchlistItems = items
+                } else {
+                    errorMessage = "No data received"
+                    showError = true
+                }
             }
         }
     }
 }
 
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
-}()
+struct StockRowView: View {
+    let item: WatchlistItem
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.name)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text("WKN: \(item.wkn)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Text(item.diff)
+                            .font(.caption)
+                            .foregroundColor(diffColor)
+                        Text("(\(item.diffPercent))")
+                            .font(.caption)
+                            .foregroundColor(diffColor)
+                    }
+                    Text(item.time)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Bid")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text(item.bid)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Ask")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text(item.ask)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private var diffColor: Color {
+        if item.diff.hasPrefix("+") {
+            return .green
+        } else if item.diff.hasPrefix("-") {
+            return .red
+        } else {
+            return .primary
+        }
+    }
+}
 
 #Preview {
     ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)

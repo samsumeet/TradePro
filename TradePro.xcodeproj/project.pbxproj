@@ -16,6 +16,10 @@
 		C9F759802E8DF1A300839296 /* TradeProTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F7597F2E8DF1A300839296 /* TradeProTests.swift */; };
 		C9F7598A2E8DF1A300839296 /* TradeProUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F759892E8DF1A300839296 /* TradeProUITests.swift */; };
 		C9F7598C2E8DF1A300839296 /* TradeProUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F7598B2E8DF1A300839296 /* TradeProUITestsLaunchTests.swift */; };
+		C9F7599B2E8DF27E00839296 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = C9F7599A2E8DF27E00839296 /* SwiftSoup */; };
+		C9F7599D2E8DF2D800839296 /* stocks.json in Resources */ = {isa = PBXBuildFile; fileRef = C9F7599C2E8DF2D800839296 /* stocks.json */; };
+		C9F7599F2E8DF2FF00839296 /* WatchListScraper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F7599E2E8DF2FF00839296 /* WatchListScraper.swift */; };
+		C9F759A22E8DF4C400839296 /* WatchlistItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F759A12E8DF4C400839296 /* WatchlistItem.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +52,9 @@
 		C9F759852E8DF1A300839296 /* TradeProUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TradeProUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9F759892E8DF1A300839296 /* TradeProUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeProUITests.swift; sourceTree = "<group>"; };
 		C9F7598B2E8DF1A300839296 /* TradeProUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeProUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		C9F7599C2E8DF2D800839296 /* stocks.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = stocks.json; sourceTree = "<group>"; };
+		C9F7599E2E8DF2FF00839296 /* WatchListScraper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchListScraper.swift; sourceTree = "<group>"; };
+		C9F759A12E8DF4C400839296 /* WatchlistItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistItem.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C9F7599B2E8DF27E00839296 /* SwiftSoup in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -98,6 +106,9 @@
 		C9F759682E8DF1A300839296 /* TradePro */ = {
 			isa = PBXGroup;
 			children = (
+				C9F759A02E8DF4B100839296 /* Model */,
+				C9F7599C2E8DF2D800839296 /* stocks.json */,
+				C9F759982E8DF23400839296 /* StockScrap */,
 				C9F759692E8DF1A300839296 /* TradeProApp.swift */,
 				C9F7596B2E8DF1A300839296 /* ContentView.swift */,
 				C9F7596D2E8DF1A300839296 /* Assets.xcassets */,
@@ -133,6 +144,22 @@
 			path = TradeProUITests;
 			sourceTree = "<group>";
 		};
+		C9F759982E8DF23400839296 /* StockScrap */ = {
+			isa = PBXGroup;
+			children = (
+				C9F7599E2E8DF2FF00839296 /* WatchListScraper.swift */,
+			);
+			path = StockScrap;
+			sourceTree = "<group>";
+		};
+		C9F759A02E8DF4B100839296 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				C9F759A12E8DF4C400839296 /* WatchlistItem.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -149,6 +176,9 @@
 			dependencies = (
 			);
 			name = TradePro;
+			packageProductDependencies = (
+				C9F7599A2E8DF27E00839296 /* SwiftSoup */,
+			);
 			productName = TradePro;
 			productReference = C9F759662E8DF1A300839296 /* TradePro.app */;
 			productType = "com.apple.product-type.application";
@@ -221,6 +251,9 @@
 				Base,
 			);
 			mainGroup = C9F7595D2E8DF1A300839296;
+			packageReferences = (
+				C9F759992E8DF27E00839296 /* XCRemoteSwiftPackageReference "SwiftSoup" */,
+			);
 			productRefGroup = C9F759672E8DF1A300839296 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -239,6 +272,7 @@
 			files = (
 				C9F759712E8DF1A300839296 /* Preview Assets.xcassets in Resources */,
 				C9F7596E2E8DF1A300839296 /* Assets.xcassets in Resources */,
+				C9F7599D2E8DF2D800839296 /* stocks.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,7 +299,9 @@
 			files = (
 				C9F759732E8DF1A300839296 /* Persistence.swift in Sources */,
 				C9F7596C2E8DF1A300839296 /* ContentView.swift in Sources */,
+				C9F759A22E8DF4C400839296 /* WatchlistItem.swift in Sources */,
 				C9F759762E8DF1A300839296 /* TradePro.xcdatamodeld in Sources */,
+				C9F7599F2E8DF2FF00839296 /* WatchListScraper.swift in Sources */,
 				C9F7596A2E8DF1A300839296 /* TradeProApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -596,6 +632,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C9F759992E8DF27E00839296 /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.7.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C9F7599A2E8DF27E00839296 /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C9F759992E8DF27E00839296 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		C9F759742E8DF1A300839296 /* TradePro.xcdatamodeld */ = {
