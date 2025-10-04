@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showError = false
     @State private var searchText = ""
     @State private var selectedFilter: StockFilter = .all
+    @State private var showingJournalSheet = false
     
     private let scraper = WatchlistScraper()
     
@@ -118,6 +119,14 @@ struct ContentView: View {
                         }
                     }
                     .disabled(isLoading)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    NavigationLink(destination: StockJounalView().environment(\.managedObjectContext, viewContext)) {
+                        Image(systemName: "book.fill")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.primary)
+                    }
                 }
             }
             .onAppear {

@@ -10,6 +10,10 @@
 		C92ACB362E8EB7D1009501DB /* StockDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB352E8EB7D1009501DB /* StockDetailsView.swift */; };
 		C92ACB3A2E8EB8E5009501DB /* StockDetailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB392E8EB8E5009501DB /* StockDetailResponse.swift */; };
 		C92ACB3C2E8EBA6B009501DB /* StockDetailsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB3B2E8EBA6B009501DB /* StockDetailsController.swift */; };
+		C92ACB402E8FD537009501DB /* StockJounalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB3F2E8FD537009501DB /* StockJounalView.swift */; };
+		C92ACB4B2E8FE02C009501DB /* StockJournal+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB492E8FE02C009501DB /* StockJournal+CoreDataClass.swift */; };
+		C92ACB4C2E8FE02C009501DB /* StockJournal+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB4A2E8FE02C009501DB /* StockJournal+CoreDataProperties.swift */; };
+		C92ACB4E2E900B2F009501DB /* StockHeatMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB4D2E900B2F009501DB /* StockHeatMapView.swift */; };
 		C9F7596A2E8DF1A300839296 /* TradeProApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F759692E8DF1A300839296 /* TradeProApp.swift */; };
 		C9F7596C2E8DF1A300839296 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F7596B2E8DF1A300839296 /* ContentView.swift */; };
 		C9F7596E2E8DF1A300839296 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9F7596D2E8DF1A300839296 /* Assets.xcassets */; };
@@ -47,6 +51,10 @@
 		C92ACB352E8EB7D1009501DB /* StockDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockDetailsView.swift; sourceTree = "<group>"; };
 		C92ACB392E8EB8E5009501DB /* StockDetailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockDetailResponse.swift; sourceTree = "<group>"; };
 		C92ACB3B2E8EBA6B009501DB /* StockDetailsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockDetailsController.swift; sourceTree = "<group>"; };
+		C92ACB3F2E8FD537009501DB /* StockJounalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockJounalView.swift; sourceTree = "<group>"; };
+		C92ACB492E8FE02C009501DB /* StockJournal+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StockJournal+CoreDataClass.swift"; path = "TradePro/StockJournal/StockJournal+CoreDataClass.swift"; sourceTree = "<group>"; };
+		C92ACB4A2E8FE02C009501DB /* StockJournal+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StockJournal+CoreDataProperties.swift"; path = "TradePro/StockJournal/StockJournal+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		C92ACB4D2E900B2F009501DB /* StockHeatMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockHeatMapView.swift; sourceTree = "<group>"; };
 		C9F759662E8DF1A300839296 /* TradePro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TradePro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9F759692E8DF1A300839296 /* TradeProApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeProApp.swift; sourceTree = "<group>"; };
 		C9F7596B2E8DF1A300839296 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -94,8 +102,10 @@
 		C92ACB372E8EB7DA009501DB /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				C92ACB3F2E8FD537009501DB /* StockJounalView.swift */,
 				C92ACB352E8EB7D1009501DB /* StockDetailsView.swift */,
 				C9F7596B2E8DF1A300839296 /* ContentView.swift */,
+				C92ACB4D2E900B2F009501DB /* StockHeatMapView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -111,6 +121,8 @@
 		C9F7595D2E8DF1A300839296 = {
 			isa = PBXGroup;
 			children = (
+				C92ACB492E8FE02C009501DB /* StockJournal+CoreDataClass.swift */,
+				C92ACB4A2E8FE02C009501DB /* StockJournal+CoreDataProperties.swift */,
 				C9F759682E8DF1A300839296 /* TradePro */,
 				C9F7597E2E8DF1A300839296 /* TradeProTests */,
 				C9F759882E8DF1A300839296 /* TradeProUITests */,
@@ -333,7 +345,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C92ACB402E8FD537009501DB /* StockJounalView.swift in Sources */,
 				C9F759732E8DF1A300839296 /* Persistence.swift in Sources */,
+				C92ACB4E2E900B2F009501DB /* StockHeatMapView.swift in Sources */,
 				C9F7596C2E8DF1A300839296 /* ContentView.swift in Sources */,
 				C9F759A22E8DF4C400839296 /* WatchlistItem.swift in Sources */,
 				C9F759A42E8EB18000839296 /* Stock.swift in Sources */,
@@ -341,6 +355,8 @@
 				C92ACB3A2E8EB8E5009501DB /* StockDetailResponse.swift in Sources */,
 				C9F7599F2E8DF2FF00839296 /* WatchListScraper.swift in Sources */,
 				C92ACB3C2E8EBA6B009501DB /* StockDetailsController.swift in Sources */,
+				C92ACB4B2E8FE02C009501DB /* StockJournal+CoreDataClass.swift in Sources */,
+				C92ACB4C2E8FE02C009501DB /* StockJournal+CoreDataProperties.swift in Sources */,
 				C92ACB362E8EB7D1009501DB /* StockDetailsView.swift in Sources */,
 				C9F7596A2E8DF1A300839296 /* TradeProApp.swift in Sources */,
 			);
