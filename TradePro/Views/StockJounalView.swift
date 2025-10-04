@@ -25,7 +25,6 @@ struct StockJounalView: View {
     @State private var showingDropdown = false
     
     var filteredStocks: [Stock] {
-        print(stocks[0].name)
         if searchText.isEmpty {
             return stocks
         } else {
@@ -38,40 +37,42 @@ struct StockJounalView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                // Header
-                HStack {
-                    Text("Stock Journal")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Spacer()
-                    
-                    NavigationLink(destination: StockHeatMapView()) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chart.bar.fill")
-                            Text("Heatmap")
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                    }
-                }
-                .padding(.top)
-                
-                // Form Section
-                VStack(spacing: 15) {
-                    // Stock Selection Dropdown
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Select Stock")
-                            .font(.headline)
-                            .foregroundColor(.primary)
+            ZStack(alignment: .top) {
+                VStack(spacing: 20) {
+                    // Header with Heatmap Link
+                    HStack {
+                        Text("Stock Journal")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
                         
-                        VStack {
+                        Spacer()
+                        
+                        NavigationLink(destination: StockHeatMapView()) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chart.bar.fill")
+                                Text("Heatmap")
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                        }
+                    }
+                    .padding(.top)
+                    
+                    // --- Form Section ---
+                    VStack(spacing: 15) {
+                        // --- Stock Selection Dropdown ---
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Select Stock")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
                             Button(action: {
-                                showingDropdown.toggle()
+                                withAnimation {
+                                    showingDropdown.toggle()
+                                }
                             }) {
                                 HStack {
                                     Text(selectedStock?.name ?? "Choose a stock...")
@@ -86,116 +87,132 @@ struct StockJounalView: View {
                                 .cornerRadius(10)
                             }
                             
-                            if showingDropdown {
-                                VStack {
-                                    // Search Field
-                                    TextField("Search stocks...", text: $searchText)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .padding(.horizontal)
-                                    
-                                    ScrollView {
-                                        LazyVStack(spacing: 0) {
-                                            ForEach(filteredStocks.prefix(10), id: \.wkn) { stock in
-                                                Button(action: {
-                                                    selectedStock = stock
-                                                    showingDropdown = true
-                                                    searchText = ""
-                                                }) {
-                                                    VStack(alignment: .leading, spacing: 4) {
-                                                        Text(stock.name)
-                                                            .font(.body)
-                                                            .foregroundColor(.primary)
-                                                        Text("WKN: \(stock.wkn)")
-                                                            .font(.caption)
-                                                            .foregroundColor(.secondary)
-                                                    }
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                                    .padding()
-                                                }
-                                                .background(Color(.systemBackground))
-                                                
-                                                Divider()
-                                            }
+                            // Profit Field
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Profit/Loss")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                TextField("Enter profit/loss amount", text: $profit)
+                                    .keyboardType(.decimalPad)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            }
+                            
+                            // Date Picker
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Date")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                DatePicker("Select Date", selection: $selectedDate, displayedComponents: .date)
+                                    .datePickerStyle(CompactDatePickerStyle())
+                            }
+                            
+                            // Save Button
+                            Button(action: saveJournalEntry) {
+                                Text("Save Entry")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .cornerRadius(10)
+                            }
+                            .disabled(selectedStock == nil || profit.isEmpty)
+                        }
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(15)
+                        .shadow(radius: 2)
+                        
+                        // Journal Entries List
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Recent Entries")
+                                .font(.headline)
+                                .padding(.horizontal)
+                            
+                            if journalEntries.isEmpty {
+                                Text("No journal entries yet")
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding()
+                            } else {
+                                ScrollView {
+                                    LazyVStack(spacing: 8) {
+                                        ForEach(journalEntries) { entry in
+                                            JournalEntryRow(entry: entry)
                                         }
                                     }
-                                    .frame(maxHeight: 200)
+                                    .padding(.horizontal)
                                 }
-                                .background(Color(.systemGray6))
-                                .cornerRadius(10)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(Color(.systemGray4), lineWidth: 1)
-                                )
                             }
                         }
-                    }
-                    
-                    // Profit Field
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Profit/Loss")
-                            .font(.headline)
-                            .foregroundColor(.primary)
                         
-                        TextField("Enter profit/loss amount", text: $profit)
-                            .keyboardType(.decimalPad)
+                        Spacer()
+                    }
+                    .padding()
+                }
+                
+                // Dropdown Overlay
+                if showingDropdown {
+                    VStack(spacing: 0) {
+                        TextField("Search stocks...", text: $searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                    }
-                    
-                    // Date Picker
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Date")
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                            .padding()
                         
-                        DatePicker("Select Date", selection: $selectedDate, displayedComponents: .date)
-                            .datePickerStyle(CompactDatePickerStyle())
-                    }
-                    
-                    // Save Button
-                    Button(action: saveJournalEntry) {
-                        Text("Save Entry")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(10)
-                    }
-                    .disabled(selectedStock == nil || profit.isEmpty)
-                }
-                .padding()
-                .background(Color(.systemBackground))
-                .cornerRadius(15)
-                .shadow(radius: 2)
-                
-                // Journal Entries List
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Recent Entries")
-                        .font(.headline)
-                        .padding(.horizontal)
-                    
-                    if journalEntries.isEmpty {
-                        Text("No journal entries yet")
-                            .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding()
-                    } else {
-                        ScrollView {
-                            LazyVStack(spacing: 8) {
-                                ForEach(journalEntries) { entry in
-                                    JournalEntryRow(entry: entry)
+                        Divider()
+                        
+                        if filteredStocks.isEmpty {
+                            Text("No results found")
+                                .foregroundColor(.secondary)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color(.systemGray6))
+                        } else {
+                            ScrollView {
+                                LazyVStack(spacing: 0) {
+                                    ForEach(filteredStocks.prefix(10), id: \.wkn) { stock in
+                                        Button(action: {
+                                            selectedStock = stock
+                                            withAnimation {
+                                                showingDropdown = false
+                                            }
+                                            searchText = ""
+                                        
+                                            // Dismiss keyboard explicitly if needed
+                                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                        }) {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(stock.name)
+                                                    .font(.body)
+                                                    .foregroundColor(.primary)
+                                                Text("WKN: \(stock.wkn)")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding()
+                                        }
+                                        .background(Color(.systemBackground))
+                                        Divider()
+                                    }
                                 }
                             }
-                            .padding(.horizontal)
+                            .frame(maxHeight: 250)
                         }
                     }
+                    .background(Color(.systemGray6))
+                    .cornerRadius(15)
+                    .shadow(radius: 5)
+                    .padding(.horizontal)
+                    .padding(.top, 80) // Adjust position below the header and button
+                    .zIndex(1)
                 }
-                
-                Spacer()
             }
-            .padding()
             .onAppear {
-                loadStocks()
+                if stocks.isEmpty {
+                    loadStocks()
+                }
             }
             .alert("Journal Entry", isPresented: $showingAlert) {
                 Button("OK") { }

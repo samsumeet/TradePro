@@ -10,11 +10,24 @@ import SwiftUI
 @main
 struct TradeProApp: App {
     let persistenceController = PersistenceController.shared
+    @State private var showLaunchScreen = true
 
     var body: some Scene {
         WindowGroup {
-            ContentView() 
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            if showLaunchScreen {
+                LaunchScreenView()
+                    .onAppear {
+                        // Hide launch screen after 3 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                showLaunchScreen = false
+                            }
+                        }
+                    }
+            } else {
+                ContentView() 
+                    .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            }
         }
     }
 }

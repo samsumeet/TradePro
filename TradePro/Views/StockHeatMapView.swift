@@ -9,9 +9,9 @@ import SwiftUI
 import CoreData
 
 enum HeatMapTimeFrame: String, CaseIterable {
-    case daily = "Daily"
     case weekly = "Weekly"
     case monthly = "Monthly"
+    case yearly = "Yearly"
 }
 
 struct HeatMapData {
@@ -83,12 +83,12 @@ struct StockHeatMapView: View {
                 ScrollView {
                     LazyVStack(spacing: 10) {
                         switch selectedTimeFrame {
-                        case .daily:
-                            DailyHeatMapView(data: heatMapData, selectedDate: selectedDate)
                         case .weekly:
                             WeeklyHeatMapView(data: heatMapData, selectedDate: selectedDate)
                         case .monthly:
                             MonthlyHeatMapView(data: heatMapData, selectedDate: selectedDate)
+                        case .yearly:
+                            YearlyHeatMapView(data: heatMapData, selectedDate: selectedDate)
                         }
                     }
                     .padding()
@@ -117,12 +117,12 @@ struct StockHeatMapView: View {
         let value = backward ? -1 : 1
         
         switch selectedTimeFrame {
-        case .daily:
-            component = .day
         case .weekly:
             component = .weekOfYear
         case .monthly:
             component = .month
+        case .yearly:
+            component = .year
         }
         
         if let newDate = calendar.date(byAdding: component, value: value, to: selectedDate) {
@@ -134,8 +134,6 @@ struct StockHeatMapView: View {
         let formatter = DateFormatter()
         
         switch selectedTimeFrame {
-        case .daily:
-            formatter.dateFormat = "MMMM d, yyyy"
         case .weekly:
             let weekStart = calendar.dateInterval(of: .weekOfYear, for: selectedDate)?.start ?? selectedDate
             let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? selectedDate
@@ -143,6 +141,8 @@ struct StockHeatMapView: View {
             return "\(formatter.string(from: weekStart)) - \(formatter.string(from: weekEnd)), \(calendar.component(.year, from: selectedDate))"
         case .monthly:
             formatter.dateFormat = "MMMM yyyy"
+        case .yearly:
+            formatter.dateFormat = "yyyy"
         }
         
         return formatter.string(from: selectedDate)
@@ -158,9 +158,6 @@ struct StockHeatMapView: View {
         let endDate: Date
         
         switch selectedTimeFrame {
-        case .daily:
-            startDate = calendar.startOfDay(for: selectedDate)
-            endDate = calendar.date(byAdding: .day, value: 1, to: startDate) ?? Date()
         case .weekly:
             let weekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate)
             startDate = weekInterval?.start ?? selectedDate
@@ -169,6 +166,10 @@ struct StockHeatMapView: View {
             let monthInterval = calendar.dateInterval(of: .month, for: selectedDate)
             startDate = monthInterval?.start ?? selectedDate
             endDate = monthInterval?.end ?? Date()
+        case .yearly:
+            let yearInterval = calendar.dateInterval(of: .year, for: selectedDate)
+            startDate = yearInterval?.start ?? selectedDate
+            endDate = yearInterval?.end ?? Date()
         }
         
         return journalEntries.filter { entry in
@@ -187,45 +188,6 @@ struct StockHeatMapView: View {
             let totalProfit = entries.reduce(0) { $0 + $1.profit }
             return HeatMapData(date: date, totalProfit: totalProfit, tradeCount: entries.count)
         }.sorted { $0.date < $1.date }
-    }
-}
-
-// MARK: - Daily Heatmap View
-struct DailyHeatMapView: View {
-    let data: [HeatMapData]
-    let selectedDate: Date
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Hourly Performance")
-                .font(.headline)
-                .padding(.bottom, 5)
-            
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 8) {
-                ForEach(0..<24, id: \.self) { hour in
-                    let hourData = data.first { Calendar.current.component(.hour, from: $0.date) == hour }
-                    
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(colorForProfit(hourData?.totalProfit ?? 0))
-                        .frame(height: 30)
-                        .overlay(
-                            Text("\(hour):00")
-                                .font(.caption2)
-                                .foregroundColor(.white)
-                        )
-                }
-            }
-            
-            if let todayData = data.first {
-                HStack {
-                    Text("Total: \(formatCurrency(todayData.totalProfit))")
-                    Spacer()
-                    Text("Trades: \(todayData.tradeCount)")
-                }
-                .font(.caption)
-                .foregroundColor(.secondary)
-            }
-        }
     }
 }
 
@@ -358,6 +320,114 @@ struct MonthlyHeatMapView: View {
     }
 }
 
+// MARK: - Yearly Heatmap View
+struct YearlyHeatMapView: View {
+    let data: [HeatMapData]
+    let selectedDate: Date
+    private let calendar = Calendar.current
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Yearly Performance")
+                .font(.headline)
+                .padding(.bottom, 5)
+            
+            let yearInterval = calendar.dateInterval(of: .year, for: selectedDate)
+            let startOfYear = yearInterval?.start ?? selectedDate
+            
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 12) {
+                ForEach(0..<12, id: \.self) { monthOffset in
+                    let currentMonth = calendar.date(byAdding: .month, value: monthOffset, to: startOfYear) ?? Date()
+                    let monthData = getMonthData(for: currentMonth)
+                    
+                    VStack(spacing: 6) {
+                        Text(monthAbbreviation(for: currentMonth))
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+                        
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(colorForProfit(monthData.totalProfit))
+                            .frame(height: 60)
+                            .overlay(
+                                VStack(spacing: 2) {
+                                    if monthData.totalProfit != 0 {
+                                        Text(formatCurrency(monthData.totalProfit))
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                        
+                                        Text("\(monthData.tradeCount) trades")
+                                            .font(.system(size: 9))
+                                            .foregroundColor(.white.opacity(0.9))
+                                    } else {
+                                        Text("No trades")
+                                            .font(.system(size: 9))
+                                            .foregroundColor(.white.opacity(0.7))
+                                    }
+                                }
+                            )
+                    }
+                }
+            }
+            
+            let yearTotal = data.reduce(0) { $0 + $1.totalProfit }
+            let yearTrades = data.reduce(0) { $0 + $1.tradeCount }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Divider()
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Year Total")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text(formatCurrency(yearTotal))
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(yearTotal >= 0 ? .green : .red)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("Total Trades")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(yearTrades)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                    }
+                }
+            }
+            .padding(.top, 8)
+        }
+    }
+    
+    private func monthAbbreviation(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM"
+        return formatter.string(from: date)
+    }
+    
+    private func getMonthData(for month: Date) -> (totalProfit: Float, tradeCount: Int) {
+        let monthInterval = calendar.dateInterval(of: .month, for: month)
+        guard let startOfMonth = monthInterval?.start,
+              let endOfMonth = monthInterval?.end else {
+            return (0, 0)
+        }
+        
+        let monthEntries = data.filter { entryData in
+            entryData.date >= startOfMonth && entryData.date < endOfMonth
+        }
+        
+        let totalProfit = monthEntries.reduce(0) { $0 + $1.totalProfit }
+        let tradeCount = monthEntries.reduce(0) { $0 + $1.tradeCount }
+        
+        return (totalProfit, tradeCount)
+    }
+}
+
 // MARK: - Heatmap Legend
 struct HeatMapLegend: View {
     var body: some View {
@@ -393,7 +463,7 @@ struct LegendItem: View {
 // MARK: - Helper Functions
 private func colorForProfit(_ profit: Float) -> Color {
     if profit > 0 {
-        let intensity = min(abs(profit) / 1000, 1.0) // Normalize to 0-1 range
+        let intensity = min(abs(profit) / 1000, 1.0)
         return Color.green.opacity(0.3 + Double(intensity) * 0.7)
     } else if profit < 0 {
         let intensity = min(abs(profit) / 1000, 1.0)
