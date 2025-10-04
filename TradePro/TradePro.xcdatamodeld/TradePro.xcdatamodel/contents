@@ -10,5 +10,6 @@
         <attribute name="profit" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="stockName" optional="YES" attributeType="String"/>
         <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="tradeType" optional="YES" attributeType="String" defaultValueString="Profit"/>
     </entity>
 </model>

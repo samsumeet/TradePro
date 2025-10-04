@@ -8,6 +8,27 @@
 import SwiftUI
 import CoreData
 
+enum TradeType: String, CaseIterable, Identifiable, Codable {
+    case profit = "Profit"
+    case loss = "Loss"
+    
+    var id: String { self.rawValue }
+    
+    var color: Color {
+        switch self {
+        case .profit: return Color(red: 0.16, green: 0.82, blue: 0.65) // Emerald Green
+        case .loss: return Color(red: 0.98, green: 0.31, blue: 0.35) // Professional Red
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .profit: return "arrow.up.circle.fill"
+        case .loss: return "arrow.down.circle.fill"
+        }
+    }
+}
+
 struct StockJounalView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @FetchRequest(
@@ -18,11 +39,22 @@ struct StockJounalView: View {
     @State private var stocks: [Stock] = []
     @State private var selectedStock: Stock?
     @State private var searchText = ""
-    @State private var profit: String = ""
+    @State private var amount: String = ""
+    @State private var selectedTradeType: TradeType = .profit
     @State private var selectedDate = Date()
     @State private var showingAlert = false
     @State private var alertMessage = ""
     @State private var showingDropdown = false
+    @State private var isSuccessAlert = false
+    
+    // Professional Trading App Colors
+    private let primaryBackground = Color(red: 0.07, green: 0.09, blue: 0.12) // Dark Navy #121820
+    private let secondaryBackground = Color(red: 0.10, green: 0.12, blue: 0.16) // Slate #1A1F28
+    private let cardBackground = Color(red: 0.13, green: 0.15, blue: 0.19) // Card Dark #212730
+    private let accentBlue = Color(red: 0.20, green: 0.51, blue: 0.98) // Financial Blue #3483FA
+    private let textPrimary = Color(red: 0.95, green: 0.96, blue: 0.97) // Off White #F2F4F7
+    private let textSecondary = Color(red: 0.60, green: 0.63, blue: 0.68) // Gray #999FAD
+    private let borderColor = Color(red: 0.18, green: 0.21, blue: 0.26) // Border #2E3542
     
     var filteredStocks: [Stock] {
         if searchText.isEmpty {
@@ -37,185 +69,416 @@ struct StockJounalView: View {
     
     var body: some View {
         NavigationView {
-            ZStack(alignment: .top) {
-                VStack(spacing: 20) {
-                    // Header with Heatmap Link
-                    HStack {
-                        Text("Stock Journal")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                        
-                        Spacer()
-                        
-                        NavigationLink(destination: StockHeatMapView()) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "chart.bar.fill")
-                                Text("Heatmap")
+            ZStack {
+                // Professional Dark Background
+                primaryBackground
+                    .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Header with Heatmap Link
+                        HStack(alignment: .center) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Trading Journal")
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .foregroundColor(textPrimary)
+                                Text("Track your performance")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(textSecondary)
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                        }
-                    }
-                    .padding(.top)
-                    
-                    // --- Form Section ---
-                    VStack(spacing: 15) {
-                        // --- Stock Selection Dropdown ---
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Select Stock")
-                                .font(.headline)
-                                .foregroundColor(.primary)
                             
-                            Button(action: {
-                                withAnimation {
-                                    showingDropdown.toggle()
+                            Spacer()
+                            
+                            NavigationLink(destination: StockHeatMapView()) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "chart.bar.fill")
+                                        .font(.system(size: 13, weight: .semibold))
+                                    Text("Heatmap")
+                                        .font(.system(size: 13, weight: .semibold))
                                 }
-                            }) {
-                                HStack {
-                                    Text(selectedStock?.name ?? "Choose a stock...")
-                                        .foregroundColor(selectedStock != nil ? .primary : .secondary)
-                                    Spacer()
-                                    Image(systemName: "chevron.down")
-                                        .foregroundColor(.secondary)
-                                        .rotationEffect(.degrees(showingDropdown ? 180 : 0))
-                                }
-                                .padding()
-                                .background(Color(.systemGray6))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(accentBlue)
+                                .foregroundColor(.white)
                                 .cornerRadius(10)
+                                .shadow(color: accentBlue.opacity(0.3), radius: 8, x: 0, y: 4)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 12)
+                        
+                        // Form Card
+                        VStack(spacing: 18) {
+                            // Stock Selection
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "chart.line.uptrend.xyaxis")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(accentBlue)
+                                    Text("Select Stock")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(textPrimary)
+                                }
+                                
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        showingDropdown.toggle()
+                                    }
+                                }) {
+                                    HStack {
+                                        if let selected = selectedStock {
+                                            VStack(alignment: .leading, spacing: 3) {
+                                                Text(selected.name)
+                                                    .font(.system(size: 15, weight: .medium))
+                                                    .foregroundColor(textPrimary)
+                                                Text("WKN: \(selected.wkn)")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(textSecondary)
+                                            }
+                                        } else {
+                                            Text("Choose a stock...")
+                                                .font(.system(size: 15))
+                                                .foregroundColor(textSecondary)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "chevron.down")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundColor(textSecondary)
+                                            .rotationEffect(.degrees(showingDropdown ? 180 : 0))
+                                            .animation(.spring(response: 0.3), value: showingDropdown)
+                                    }
+                                    .padding(14)
+                                    .background(secondaryBackground)
+                                    .cornerRadius(10)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(showingDropdown ? accentBlue : borderColor, lineWidth: 1.5)
+                                    )
+                                }
                             }
                             
-                            // Profit Field
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Profit/Loss")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
+                            // Trade Type Picker (Profit/Loss)
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "arrow.up.arrow.down.circle")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(accentBlue)
+                                    Text("Trade Type")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(textPrimary)
+                                }
                                 
-                                TextField("Enter profit/loss amount", text: $profit)
-                                    .keyboardType(.decimalPad)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                HStack(spacing: 12) {
+                                    ForEach(TradeType.allCases) { type in
+                                        Button(action: {
+                                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                                selectedTradeType = type
+                                            }
+                                        }) {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: type.icon)
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                Text(type.rawValue)
+                                                    .font(.system(size: 14, weight: .semibold))
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                selectedTradeType == type
+                                                    ? type.color.opacity(0.15)
+                                                    : secondaryBackground
+                                            )
+                                            .foregroundColor(
+                                                selectedTradeType == type
+                                                    ? type.color
+                                                    : textSecondary
+                                            )
+                                            .cornerRadius(10)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .stroke(
+                                                        selectedTradeType == type
+                                                            ? type.color
+                                                            : borderColor,
+                                                        lineWidth: 1.5
+                                                    )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Amount Field
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "dollarsign.circle")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(accentBlue)
+                                    Text("Amount")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(textPrimary)
+                                }
+                                
+                                HStack(spacing: 10) {
+                                    Image(systemName: selectedTradeType.icon)
+                                        .foregroundColor(selectedTradeType.color)
+                                        .font(.system(size: 18, weight: .semibold))
+                                    
+                                    TextField("0.00", text: $amount)
+                                        .keyboardType(.decimalPad)
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(textPrimary)
+                                }
+                                .padding(14)
+                                .background(secondaryBackground)
+                                .cornerRadius(10)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(borderColor, lineWidth: 1.5)
+                                )
                             }
                             
                             // Date Picker
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Date")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "calendar")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(accentBlue)
+                                    Text("Trade Date")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(textPrimary)
+                                }
                                 
-                                DatePicker("Select Date", selection: $selectedDate, displayedComponents: .date)
-                                    .datePickerStyle(CompactDatePickerStyle())
+                                DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                                    .datePickerStyle(.compact)
+                                    .colorScheme(.dark)
+                                    .padding(12)
+                                    .background(secondaryBackground)
+                                    .cornerRadius(10)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(borderColor, lineWidth: 1.5)
+                                    )
                             }
                             
                             // Save Button
                             Button(action: saveJournalEntry) {
-                                Text("Save Entry")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.blue)
-                                    .cornerRadius(10)
+                                HStack(spacing: 10) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 16, weight: .bold))
+                                    Text("Save Entry")
+                                        .font(.system(size: 16, weight: .bold))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    selectedStock == nil || amount.isEmpty
+                                        ? Color.gray.opacity(0.3)
+                                        : selectedTradeType.color
+                                )
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                .shadow(
+                                    color: selectedStock == nil || amount.isEmpty
+                                        ? Color.clear
+                                        : selectedTradeType.color.opacity(0.4),
+                                    radius: 12, x: 0, y: 6
+                                )
                             }
-                            .disabled(selectedStock == nil || profit.isEmpty)
+                            .disabled(selectedStock == nil || amount.isEmpty)
                         }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(15)
-                        .shadow(radius: 2)
+                        .padding(20)
+                        .background(cardBackground)
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.3), radius: 15, x: 0, y: 8)
+                        .padding(.horizontal, 20)
                         
-                        // Journal Entries List
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Recent Entries")
-                                .font(.headline)
-                                .padding(.horizontal)
-                            
-                            if journalEntries.isEmpty {
-                                Text("No journal entries yet")
-                                    .foregroundColor(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding()
-                            } else {
-                                ScrollView {
-                                    LazyVStack(spacing: 8) {
-                                        ForEach(journalEntries) { entry in
-                                            JournalEntryRow(entry: entry)
-                                        }
-                                    }
-                                    .padding(.horizontal)
+                        // Journal Entries Section with Scrolling
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "list.bullet.clipboard.fill")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(accentBlue)
+                                    Text("Recent Entries")
+                                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                                        .foregroundColor(textPrimary)
+                                }
+                                Spacer()
+                                if !journalEntries.isEmpty {
+                                    Text("\(journalEntries.count)")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(textPrimary)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
+                                        .background(secondaryBackground)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(borderColor, lineWidth: 1)
+                                        )
                                 }
                             }
+                            .padding(.horizontal, 20)
+                            
+                            if journalEntries.isEmpty {
+                                VStack(spacing: 16) {
+                                    Image(systemName: "chart.line.text.clipboard")
+                                        .font(.system(size: 48, weight: .light))
+                                        .foregroundColor(textSecondary.opacity(0.5))
+                                    
+                                    VStack(spacing: 6) {
+                                        Text("No journal entries yet")
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundColor(textPrimary)
+                                        Text("Start tracking your trades to see them here")
+                                            .font(.system(size: 13))
+                                            .foregroundColor(textSecondary)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 50)
+                                .background(cardBackground)
+                                .cornerRadius(16)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(borderColor, lineWidth: 1)
+                                )
+                                .padding(.horizontal, 20)
+                            } else {
+                                // Scrollable entries container
+                                ScrollView(.vertical, showsIndicators: true) {
+                                    LazyVStack(spacing: 12) {
+                                        ForEach(journalEntries) { entry in
+                                            JournalEntryRow(
+                                                entry: entry,
+                                                cardBg: cardBackground,
+                                                textPrimary: textPrimary,
+                                                textSecondary: textSecondary,
+                                                borderColor: borderColor
+                                            )
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                    .padding(.bottom, 20)
+                                }
+                                .frame(height: 400) // Fixed height for scrollable area
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(primaryBackground.opacity(0.5))
+                                )
+                            }
                         }
-                        
-                        Spacer()
+                        .padding(.top, 8)
                     }
-                    .padding()
+                    .padding(.bottom, 30)
                 }
                 
                 // Dropdown Overlay
                 if showingDropdown {
+                    Color.black.opacity(0.6)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                showingDropdown = false
+                            }
+                        }
+                    
                     VStack(spacing: 0) {
-                        TextField("Search stocks...", text: $searchText)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .padding()
+                        // Search Bar
+                        HStack(spacing: 10) {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(textSecondary)
+                                .font(.system(size: 14))
+                            TextField("Search stocks...", text: $searchText)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                .font(.system(size: 15))
+                                .foregroundColor(textPrimary)
+                        }
+                        .padding(14)
+                        .background(secondaryBackground)
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(borderColor, lineWidth: 1.5)
+                        )
+                        .padding()
                         
                         Divider()
+                            .background(borderColor)
                         
                         if filteredStocks.isEmpty {
-                            Text("No results found")
-                                .foregroundColor(.secondary)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color(.systemGray6))
+                            VStack(spacing: 12) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 38))
+                                    .foregroundColor(textSecondary.opacity(0.5))
+                                Text("No results found")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(textSecondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
                         } else {
                             ScrollView {
                                 LazyVStack(spacing: 0) {
                                     ForEach(filteredStocks.prefix(10), id: \.wkn) { stock in
                                         Button(action: {
                                             selectedStock = stock
-                                            withAnimation {
+                                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                                 showingDropdown = false
                                             }
                                             searchText = ""
-                                        
-                                            // Dismiss keyboard explicitly if needed
                                             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                                         }) {
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(stock.name)
-                                                    .font(.body)
-                                                    .foregroundColor(.primary)
-                                                Text("WKN: \(stock.wkn)")
-                                                    .font(.caption)
-                                                    .foregroundColor(.secondary)
+                                            HStack {
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Text(stock.name)
+                                                        .font(.system(size: 15, weight: .medium))
+                                                        .foregroundColor(textPrimary)
+                                                    Text("WKN: \(stock.wkn)")
+                                                        .font(.system(size: 12))
+                                                        .foregroundColor(textSecondary)
+                                                }
+                                                Spacer()
+                                                Image(systemName: "chevron.right")
+                                                    .font(.system(size: 11, weight: .semibold))
+                                                    .foregroundColor(textSecondary.opacity(0.5))
                                             }
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .padding()
+                                            .padding(.vertical, 14)
+                                            .padding(.horizontal, 16)
                                         }
-                                        .background(Color(.systemBackground))
-                                        Divider()
+                                        
+                                        if stock.wkn != filteredStocks.prefix(10).last?.wkn {
+                                            Divider()
+                                                .background(borderColor)
+                                                .padding(.leading, 16)
+                                        }
                                     }
                                 }
                             }
-                            .frame(maxHeight: 250)
+                            .frame(maxHeight: 300)
                         }
                     }
-                    .background(Color(.systemGray6))
-                    .cornerRadius(15)
-                    .shadow(radius: 5)
-                    .padding(.horizontal)
-                    .padding(.top, 80) // Adjust position below the header and button
-                    .zIndex(1)
+                    .background(cardBackground)
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.4), radius: 25, x: 0, y: 15)
+                    .padding(.horizontal, 20)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .padding(.top, 100)
+                    .transition(.scale(scale: 0.95).combined(with: .opacity))
                 }
             }
+            .navigationBarHidden(true)
+            .preferredColorScheme(.dark)
             .onAppear {
                 if stocks.isEmpty {
                     loadStocks()
                 }
             }
-            .alert("Journal Entry", isPresented: $showingAlert) {
-                Button("OK") { }
+            .alert(isSuccessAlert ? "Success" : "Error", isPresented: $showingAlert) {
+                Button("OK") {
+                    isSuccessAlert = false
+                }
             } message: {
                 Text(alertMessage)
             }
@@ -238,8 +501,9 @@ struct StockJounalView: View {
     
     private func saveJournalEntry() {
         guard let selectedStock = selectedStock,
-              let profitValue = Float(profit) else {
+              let amountValue = Float(amount) else {
             alertMessage = "Please fill in all fields correctly"
+            isSuccessAlert = false
             showingAlert = true
             return
         }
@@ -248,24 +512,29 @@ struct StockJounalView: View {
         newEntry.id = UUID()
         newEntry.stockName = selectedStock.name
         newEntry.instrumentID = selectedStock.instrument_id
-        newEntry.profit = profitValue
+        newEntry.profit = selectedTradeType == .profit ? amountValue : -amountValue
+        newEntry.tradeType = selectedTradeType.rawValue
         newEntry.date = selectedDate
         newEntry.timestamp = Date()
         
         do {
             try viewContext.save()
             
-            // Reset form and dropdown states
-            self.selectedStock = nil
-            self.profit = ""
-            self.selectedDate = Date()
-            self.showingDropdown = false
-            self.searchText = ""
+            withAnimation {
+                self.selectedStock = nil
+                self.amount = ""
+                self.selectedTradeType = .profit
+                self.selectedDate = Date()
+                self.showingDropdown = false
+                self.searchText = ""
+            }
             
             alertMessage = "Journal entry saved successfully!"
+            isSuccessAlert = true
             showingAlert = true
         } catch {
             alertMessage = "Error saving entry: \(error.localizedDescription)"
+            isSuccessAlert = false
             showingAlert = true
         }
     }
@@ -273,30 +542,85 @@ struct StockJounalView: View {
 
 struct JournalEntryRow: View {
     let entry: StockJournal
+    let cardBg: Color
+    let textPrimary: Color
+    let textSecondary: Color
+    let borderColor: Color
+    
+    private var tradeType: TradeType {
+        TradeType(rawValue: entry.tradeType ?? "Profit") ?? .profit
+    }
+    
+    private var isProfit: Bool {
+        entry.profit >= 0
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(entry.stockName ?? "Unknown Stock")
-                    .font(.headline)
-                Spacer()
-                Text(entry.profit >= 0 ? "+$\(entry.profit, specifier: "%.2f")" : "-$\(abs(entry.profit), specifier: "%.2f")")
-                    .font(.headline)
-                    .foregroundColor(entry.profit >= 0 ? .green : .red)
-            }
+        HStack(spacing: 0) {
+            // Profit/Loss Indicator Bar
+            Rectangle()
+                .fill(tradeType.color)
+                .frame(width: 4)
             
-            HStack {
-                Spacer()
-                if let date = entry.date {
-                    Text(date, style: .date)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(entry.stockName ?? "Unknown Stock")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(textPrimary)
+                        
+                        HStack(spacing: 10) {
+                            if let date = entry.date {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "calendar")
+                                        .font(.system(size: 11))
+                                    Text(date, style: .date)
+                                        .font(.system(size: 12))
+                                }
+                                .foregroundColor(textSecondary)
+                            }
+                            
+                            // Trade Type Badge
+                            HStack(spacing: 4) {
+                                Image(systemName: tradeType.icon)
+                                    .font(.system(size: 10))
+                                Text(tradeType.rawValue)
+                                    .font(.system(size: 11, weight: .semibold))
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(tradeType.color.opacity(0.15))
+                            .foregroundColor(tradeType.color)
+                            .cornerRadius(6)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("$\(abs(entry.profit), specifier: "%.2f")")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundColor(tradeType.color)
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: isProfit ? "arrow.up.right" : "arrow.down.right")
+                                .font(.system(size: 10, weight: .bold))
+                            Text(isProfit ? "Profit" : "Loss")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .foregroundColor(tradeType.color)
+                    }
                 }
             }
+            .padding(16)
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .background(cardBg)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(borderColor, lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
     }
 }
 

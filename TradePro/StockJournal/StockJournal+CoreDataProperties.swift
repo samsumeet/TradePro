@@ -22,6 +22,7 @@ extension StockJournal {
     @NSManaged public var stockName: String?
     @NSManaged public var timestamp: Date?
     @NSManaged public var id: UUID?
+    @NSManaged public var tradeType: String? 
 
 }
 
