@@ -57,6 +57,7 @@ struct StockJounalView: View {
     private let borderColor = Color(red: 0.18, green: 0.21, blue: 0.26) // Border #2E3542
     
     var filteredStocks: [Stock] {
+    
         if searchText.isEmpty {
             return stocks
         } else {
@@ -65,8 +66,43 @@ struct StockJounalView: View {
                 stock.wkn.localizedCaseInsensitiveContains(searchText)
             }
         }
+        
     }
-    
+    func exportToJSONManually() {
+        let context = PersistenceController.shared.container.viewContext
+        let fetchRequest: NSFetchRequest<StockJournal> = StockJournal.fetchRequest()
+        
+        do {
+            let journals = try context.fetch(fetchRequest)
+            
+            var jsonArray: [[String: Any]] = []
+            
+            for journal in journals {
+                var dict: [String: Any] = [:]
+                dict["id"] = journal.id?.uuidString
+                dict["stockName"] = journal.stockName
+                dict["instrumentID"] = journal.instrumentID
+                dict["profit"] = journal.profit
+                dict["date"] = journal.date?.ISO8601Format()
+                dict["timestamp"] = journal.timestamp?.ISO8601Format()
+                dict["tradeType"] = journal.tradeType
+                
+                jsonArray.append(dict)
+            }
+            
+            // Convert to JSON
+            let jsonData = try JSONSerialization.data(withJSONObject: jsonArray, options: .prettyPrinted)
+            
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("📊 Core Data as JSON:")
+                print(jsonString)
+            }
+            
+        } catch {
+            print("❌ Error: \(error)")
+        }
+    }
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -598,7 +634,7 @@ struct JournalEntryRow: View {
                     Spacer()
                     
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text("$\(abs(entry.profit), specifier: "%.2f")")
+                        Text("€\(abs(entry.profit), specifier: "%.2f")")
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundColor(tradeType.color)
                         

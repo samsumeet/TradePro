@@ -25,7 +25,7 @@ struct TradeProApp: App {
                         }
                     }
             } else {
-                ContentView() 
+                MainTabView()
                     .environment(\.managedObjectContext, persistenceController.container.viewContext)
             }
         }

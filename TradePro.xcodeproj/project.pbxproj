@@ -16,6 +16,7 @@
 		C92ACB4E2E900B2F009501DB /* StockHeatMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB4D2E900B2F009501DB /* StockHeatMapView.swift */; };
 		C92ACB502E91C674009501DB /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C92ACB4F2E91C674009501DB /* Launch Screen.storyboard */; };
 		C92ACB522E91C83B009501DB /* LauchScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB512E91C83B009501DB /* LauchScreenView.swift */; };
+		C92ACB542E91DA74009501DB /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92ACB532E91DA74009501DB /* MainTabView.swift */; };
 		C9F7596A2E8DF1A300839296 /* TradeProApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F759692E8DF1A300839296 /* TradeProApp.swift */; };
 		C9F7596C2E8DF1A300839296 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F7596B2E8DF1A300839296 /* ContentView.swift */; };
 		C9F7596E2E8DF1A300839296 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9F7596D2E8DF1A300839296 /* Assets.xcassets */; };
@@ -59,6 +60,7 @@
 		C92ACB4D2E900B2F009501DB /* StockHeatMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockHeatMapView.swift; sourceTree = "<group>"; };
 		C92ACB4F2E91C674009501DB /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 		C92ACB512E91C83B009501DB /* LauchScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauchScreenView.swift; sourceTree = "<group>"; };
+		C92ACB532E91DA74009501DB /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		C9F759662E8DF1A300839296 /* TradePro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TradePro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9F759692E8DF1A300839296 /* TradeProApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeProApp.swift; sourceTree = "<group>"; };
 		C9F7596B2E8DF1A300839296 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -111,6 +113,7 @@
 				C9F7596B2E8DF1A300839296 /* ContentView.swift */,
 				C92ACB4D2E900B2F009501DB /* StockHeatMapView.swift */,
 				C92ACB512E91C83B009501DB /* LauchScreenView.swift */,
+				C92ACB532E91DA74009501DB /* MainTabView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -355,6 +358,7 @@
 				C92ACB402E8FD537009501DB /* StockJounalView.swift in Sources */,
 				C9F759732E8DF1A300839296 /* Persistence.swift in Sources */,
 				C92ACB4E2E900B2F009501DB /* StockHeatMapView.swift in Sources */,
+				C92ACB542E91DA74009501DB /* MainTabView.swift in Sources */,
 				C9F7596C2E8DF1A300839296 /* ContentView.swift in Sources */,
 				C9F759A22E8DF4C400839296 /* WatchlistItem.swift in Sources */,
 				C9F759A42E8EB18000839296 /* Stock.swift in Sources */,

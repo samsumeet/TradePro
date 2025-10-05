@@ -120,14 +120,6 @@ struct ContentView: View {
                     }
                     .disabled(isLoading)
                 }
-                
-                ToolbarItem(placement: .navigationBarLeading) {
-                    NavigationLink(destination: StockJounalView().environment(\.managedObjectContext, viewContext)) {
-                        Image(systemName: "book.fill")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.primary)
-                    }
-                }
             }
             .onAppear {
                 if watchlistItems.isEmpty {

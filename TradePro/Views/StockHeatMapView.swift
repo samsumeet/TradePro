@@ -275,12 +275,7 @@ struct MonthlyHeatMapView: View {
             
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 6) {
                 // Add empty cells for days before the first day of the month
-                let firstWeekday = calendar.component(.weekday, from: startOfMonth)
-                ForEach(1..<firstWeekday, id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color.clear)
-                        .frame(height: 40)
-                }
+               
                 
                 ForEach(1...daysInMonth, id: \.self) { day in
                     let currentDay = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) ?? Date()
@@ -476,7 +471,7 @@ private func colorForProfit(_ profit: Float) -> Color {
 private func formatCurrency(_ amount: Float) -> String {
     let formatter = NumberFormatter()
     formatter.numberStyle = .currency
-    formatter.currencyCode = "USD"
+    formatter.currencyCode = "Euro"
     formatter.maximumFractionDigits = 0
     return formatter.string(from: NSNumber(value: amount)) ?? "$0"
 }
