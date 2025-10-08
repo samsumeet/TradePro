@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct TradeProApp: App {
     let persistenceController = PersistenceController.shared
+    @StateObject private var authManager = AuthenticationManager()
     @State private var showLaunchScreen = true
 
     var body: some Scene {
@@ -27,6 +28,7 @@ struct TradeProApp: App {
             } else {
                 MainTabView()
                     .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                    .environmentObject(authManager)
             }
         }
     }

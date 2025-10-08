@@ -14,6 +14,12 @@ struct MainTabView: View {
                     Label("Home", systemImage: "house.fill")
                 }
                 .tag(0)
+            // News Tab
+            StockNewsView()
+                .tabItem {
+                    Label("News", systemImage: "newspaper.fill")
+                }
+                .tag(1)
             
             // Journal Tab
             StockJounalView()
@@ -21,7 +27,7 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Journal", systemImage: "book.fill")
                 }
-                .tag(1)
+                .tag(2)
             
             // HeatMap Tab
             StockHeatMapView()
@@ -29,7 +35,8 @@ struct MainTabView: View {
                 .tabItem {
                     Label("HeatMap", systemImage: "chart.bar.fill")
                 }
-                .tag(2)
+                .tag(3)
+            
         }
         .accentColor(.blue) // Tab bar selection color
         .onAppear {

@@ -10,6 +10,7 @@ import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject var authManager: AuthenticationManager
     @State private var watchlistItems: [WatchlistItem] = []
     @State private var isLoading = false
     @State private var errorMessage = ""
@@ -17,6 +18,7 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var selectedFilter: StockFilter = .all
     @State private var showingJournalSheet = false
+    @State private var showingProfileSheet = false
     
     private let scraper = WatchlistScraper()
     
@@ -52,11 +54,17 @@ struct ContentView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
+                    // Custom Header with Profile
+                    customHeader
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .padding(.bottom, 12)
+                        .background(Color(.systemGroupedBackground))
+                    
                     // Search and Filter Bar
                     if !watchlistItems.isEmpty {
                         searchFilterBar
                             .padding(.horizontal, 16)
-                            .padding(.top, 8)
                             .padding(.bottom, 12)
                             .background(Color(.systemGroupedBackground))
                     }
@@ -100,27 +108,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Watchlist")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: fetchWatchlist) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.clockwise")
-                                .font(.system(size: 15, weight: .semibold))
-                            if !watchlistItems.isEmpty {
-                                Text("\(watchlistItems.count)")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Capsule().fill(Color.blue))
-                            }
-                        }
-                    }
-                    .disabled(isLoading)
-                }
-            }
+            .navigationBarHidden(true)
             .onAppear {
                 if watchlistItems.isEmpty {
                     fetchWatchlist()
@@ -131,8 +119,79 @@ struct ContentView: View {
             } message: {
                 Text(errorMessage)
             }
+            .sheet(isPresented: $showingProfileSheet) {
+                ProfileView()
+                    .environmentObject(authManager)
+            }
         }
         .navigationViewStyle(.stack)
+    }
+    
+    // MARK: - Custom Header with Profile
+    private var customHeader: some View {
+        HStack(spacing: 16) {
+            // Title Section
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Watchlist")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                if !watchlistItems.isEmpty {
+                    Text("\(watchlistItems.count) stocks tracked")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            // Action Buttons
+            HStack(spacing: 12) {
+                // Refresh Button
+                Button(action: fetchWatchlist) {
+                    ZStack {
+                        Circle()
+                            .fill(Color(.systemGray6))
+                            .frame(width: 40, height: 40)
+                        
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.blue)
+                    }
+                }
+                .disabled(isLoading)
+                .opacity(isLoading ? 0.5 : 1.0)
+                
+                // Profile Avatar Button
+                Button(action: { showingProfileSheet = true }) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color.blue,
+                                        Color.blue.opacity(0.7)
+                                    ]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 40, height: 40)
+                        
+                        if authManager.isAuthenticated {
+                            Text(authManager.currentUser?.initials ?? "?")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                        } else {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                }
+            }
+        }
     }
     
     // MARK: - Search and Filter Bar
@@ -699,5 +758,7 @@ struct EmptyStateCardView: View {
 }
 
 #Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ContentView()
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environmentObject(AuthenticationManager())
 }
